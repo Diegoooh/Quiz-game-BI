@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BlurQuiz">
+<title>BlurQuiz — Adivinhe a Ferramenta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a0f;
+  --bg2:#111118;
+  --surface:#16161f;
+  --surface2:#1e1e2a;
+  --surface3:#252535;
+  --border:#2a2a3a;
+  --border2:#333345;
+  --cyan:#00e5ff;
+  --cyan-dim:rgba(0,229,255,.12);
+  --cyan-glow:rgba(0,229,255,.25);
+  --red:#ff3d6e;
+  --red-dim:rgba(255,61,110,.12);
+  --gold:#ffd700;
+  --gold-dim:rgba(255,215,0,.12);
+  --green:#22c55e;
+  --green-dim:rgba(34,197,94,.12);
+  --text:#eeeef5;
+  --text2:#aaaabc;
+  --muted:#666678;
+  --r-sm:10px;--r-md:14px;--r-lg:18px;--r-xl:22px;
+  --font-body:'DM Sans',sans-serif;
+  --font-display:'Space Grotesk',sans-serif;
+  --shadow:0 4px 24px rgba(0,0,0,.5);
+  --shadow-cyan:0 0 32px rgba(0,229,255,.15);
+}
+html,body{height:100%;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;min-height:100dvh;line-height:1.5}
+
+/* ═══ LAYOUT ═══ */
+#app{max-width:540px;margin:0 auto;padding:0 1rem 5rem;min-height:100dvh;position:relative}
+
+/* ═══ SCREENS ═══ */
+.screen{display:none}
+.screen.active{display:block;animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ LOGO ═══ */
+.logo-area{text-align:center;padding:3rem 0 2rem}
+.logo-mark{font-family:var(--font-display);font-size:3rem;font-weight:900;letter-spacing:-2px;line-height:1;display:flex;align-items:center;justify-content:center;gap:0}
+.logo-mark .b{color:var(--cyan)}.logo-mark .q{color:var(--red)}
+.logo-sub{color:var(--muted);font-size:.88rem;margin-top:.5rem;letter-spacing:.01em}
+.logo-badge{display:inline-flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:.28rem .85rem;font-size:.72rem;color:var(--text2);margin-top:.75rem;letter-spacing:.04em}
+.logo-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ═══ CARD ═══ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.5rem;margin-bottom:.85rem;position:relative}
+.card-hd{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.card-divider{height:1px;background:var(--border);margin:1rem -1.5rem}
+
+/* ═══ FIELD ═══ */
+.field{margin-bottom:1rem}
+.field:last-child{margin-bottom:0}
+.field label{font-size:.72rem;font-weight:600;color:var(--text2);display:block;margin-bottom:.45rem;text-transform:uppercase;letter-spacing:.06em}
+.input{
+  width:100%;background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--r-md);padding:.9rem 1.1rem;
+  color:var(--text);font-family:var(--font-body);font-size:1rem;font-weight:500;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  -webkit-appearance:none;appearance:none;caret-color:var(--cyan);
+}
+.input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px var(--cyan-dim)}
+.input::placeholder{color:var(--muted)}
+.input-hint{font-size:.72rem;color:var(--muted);margin-top:.35rem}
+
+/* ═══ BUTTONS ═══ */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  width:100%;padding:1rem 1.5rem;border-radius:var(--r-md);
+  font-family:var(--font-body);font-size:.95rem;font-weight:700;
+  cursor:pointer;border:none;text-align:center;
+  transition:transform .12s,filter .15s,box-shadow .2s;
+  user-select:none;letter-spacing:.01em;
+}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
+.btn+.btn{margin-top:.5rem}
+.btn-primary{background:var(--cyan);color:#000;box-shadow:0 4px 20px var(--cyan-glow)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.1);box-shadow:0 6px 28px var(--cyan-glow)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover:not(:disabled){filter:brightness(1.08)}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover:not(:disabled){background:var(--surface3)}
+.btn-sm{padding:.6rem 1.1rem;font-size:.85rem;width:auto;display:inline-flex;border-radius:var(--r-sm)}
+.btn-icon{width:2.5rem;height:2.5rem;border-radius:var(--r-sm);padding:0;flex-shrink:0}
+
+/* ═══ DIVIDER ═══ */
+.divider{display:flex;align-items:center;gap:.75rem;margin:.75rem 0;color:var(--muted);font-size:.78rem;font-weight:500}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ═══ ALERT / BANNER ═══ */
+.alert{display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border-radius:var(--r-md);font-size:.85rem;line-height:1.5}
+.alert-info{background:var(--cyan-dim);border:1px solid rgba(0,229,255,.2);color:var(--cyan)}
+.alert-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:#f59e0b}
+.alert-success{background:var(--green-dim);border:1px solid rgba(34,197,94,.2);color:var(--green)}
+.alert-icon{font-size:1rem;flex-shrink:0;margin-top:.05rem}
+
+/* ═══ PIN HERO ═══ */
+.pin-hero{
+  text-align:center;
+  background:linear-gradient(135deg,var(--cyan-dim),var(--red-dim));
+  border:1.5px solid rgba(0,229,255,.25);
+  border-radius:var(--r-xl);padding:1.75rem 1.25rem 1.4rem;
+  margin-bottom:.85rem;position:relative;overflow:hidden;
+}
+.pin-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% -20%,rgba(0,229,255,.08),transparent 70%);
+  pointer-events:none;
+}
+.pin-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;margin-bottom:.5rem}
+.pin-code{
+  font-family:var(--font-display);font-size:4rem;font-weight:900;
+  color:var(--cyan);letter-spacing:.4em;line-height:1;
+  text-shadow:var(--shadow-cyan);margin-bottom:.5rem;
+}
+.pin-sub{font-size:.78rem;color:var(--text2)}
+
+/* ═══ SHARE ═══ */
+.share-link-row{display:flex;gap:.4rem;margin-bottom:.75rem}
+.share-link-input{
+  flex:1;min-width:0;background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:.6rem .85rem;
+  color:var(--cyan);font-family:var(--font-body);font-size:.75rem;
+  outline:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  cursor:default;
+}
+.btn-copy-link{
+  background:var(--cyan);color:#000;border:none;
+  border-radius:var(--r-sm);padding:.6rem 1rem;
+  font-family:var(--font-body);font-size:.82rem;font-weight:700;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:filter .15s;display:flex;align-items:center;gap:.3rem;
+}
+.btn-copy-link:active{filter:brightness(.88)}
+.share-social{display:flex;gap:.4rem;flex-wrap:wrap}
+.social-btn{
+  display:inline-flex;align-items:center;gap:.38rem;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r-sm);padding:.5rem .9rem;
+  color:var(--text);font-family:var(--font-body);
+  font-size:.8rem;font-weight:600;cursor:pointer;
+  transition:border-color .18s,background .18s;
+}
+.social-btn:hover{border-color:var(--cyan);background:var(--cyan-dim)}
+.social-btn:active{transform:scale(.96)}
+.qr-block{text-align:center;padding-top:.9rem;margin-top:.9rem;border-top:1px solid var(--border)}
+.qr-block canvas{border-radius:var(--r-sm);width:90px;height:90px;background:#fff;display:block;margin:0 auto}
+.qr-block p{font-size:.68rem;color:var(--muted);margin-top:.35rem}
+
+/* ═══ PLAYERS AREA ═══ */
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
+.section-hd .lbl{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.count-pill{background:var(--cyan);color:#000;font-size:.68rem;font-weight:900;border-radius:20px;padding:.18rem .6rem;min-width:1.6rem;text-align:center}
+.players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.4rem;margin-bottom:1rem;min-height:58px}
+.p-chip{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:.55rem .5rem .45rem;
+  text-align:center;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+  transition:border-color .2s;
+}
+.p-chip:hover{border-color:var(--border2)}
+.p-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;margin:0 auto .3rem;border:2px solid;position:relative}
+.p-av .online-dot{position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:var(--green);border:1.5px solid var(--surface2)}
+.p-chip .pname{font-size:.74rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.p-chip .pscore{font-size:.62rem;color:var(--cyan);font-weight:700;margin-top:.1rem}
+@keyframes popIn{from{transform:scale(.5) translateY(6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+/* ═══ ADD ROW ═══ */
+.add-row{display:flex;gap:.4rem;align-items:center}
+.add-row .input{flex:1;padding:.72rem .9rem;font-size:.9rem}
+.btn-add{
+  background:var(--cyan);color:#000;border:none;
+  border-radius:var(--r-sm);padding:.72rem 1rem;
+  font-family:var(--font-body);font-size:.85rem;font-weight:700;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:filter .15s;display:flex;align-items:center;gap:.3rem;
+}
+.btn-add:active{filter:brightness(.88)}
+
+/* ═══ WAITING SCREEN (jogador) ═══ */
+.wait-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;
+  padding-top:2.5rem;padding-bottom:2rem;gap:0;min-height:100dvh;
+}
+.wait-icon-wrap{font-size:4rem;animation:float 2s ease-in-out infinite;margin-bottom:1rem}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.wait-title{font-family:var(--font-display);font-size:1.6rem;font-weight:900;margin-bottom:.4rem;text-align:center}
+.wait-sub{font-size:.88rem;color:var(--text2);text-align:center;max-width:280px;line-height:1.6;margin-bottom:1.5rem}
+.wait-sala-pill{
+  display:flex;align-items:center;gap:.6rem;
+  background:var(--surface);border:1.5px solid rgba(0,229,255,.3);
+  border-radius:var(--r-lg);padding:.6rem 1.4rem .6rem 1rem;
+  margin-bottom:1.25rem;
+}
+.wait-sala-pill .sala-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.wait-sala-pill .sala-code{font-family:var(--font-display);font-size:1.5rem;font-weight:900;color:var(--cyan);letter-spacing:.15em}
+.wait-you{
+  display:flex;align-items:center;gap:.6rem;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:.6rem 1rem;margin-bottom:1.5rem;
+  font-size:.88rem;
+}
+.wait-you .wy-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.72rem;flex-shrink:0;border:1.5px solid}
+.wait-you .wy-name{font-weight:600;flex:1}
+.wait-you .wy-badge{font-size:.7rem;color:var(--green);background:var(--green-dim);border-radius:20px;padding:.15rem .6rem}
+
+/* Lista de jogadores na sala de espera */
+.lobby-box{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1rem 1rem .75rem;margin-top:.25rem}
+.lobby-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.lobby-hd .lbl{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.lobby-count{display:flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--cyan);font-weight:700}
+.lobby-list{display:flex;flex-direction:column;gap:.35rem;max-height:200px;overflow-y:auto}
+.lobby-item{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.4rem .6rem;border-radius:var(--r-sm);
+  background:var(--surface2);
+  animation:slideIn .3s ease both;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.lobby-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.65rem;flex-shrink:0;border:1.5px solid}
+.lobby-name{font-size:.84rem;font-weight:600;flex:1}
+.lobby-tag{font-size:.65rem;color:var(--muted);background:var(--surface3);border-radius:20px;padding:.1rem .5rem}
+.lobby-you-tag{font-size:.65rem;color:var(--cyan);background:var(--cyan-dim);border-radius:20px;padding:.1rem .5rem}
+.lobby-empty{text-align:center;color:var(--muted);font-size:.8rem;padding:.5rem}
+
+/* Pulse indicator */
+.pulse-ring{display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--muted);margin-top:1rem}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);animation:pulseDot 1.5s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.5}}
+
+/* ═══ PERGUNTA ═══ */
+.q-topbar{display:flex;align-items:center;gap:.7rem;margin-bottom:1rem}
+.q-pill{
+  background:var(--cyan);color:#000;
+  border-radius:var(--r-sm);padding:.22rem .7rem;
+  font-family:var(--font-display);font-weight:700;font-size:.78rem;white-space:nowrap;
+}
+.timer-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.timer-fill{height:100%;background:var(--cyan);border-radius:3px;transition:width 1s linear}
+.timer-num{font-family:var(--font-display);font-size:1.1rem;font-weight:900;color:var(--cyan);min-width:2.2ch;text-align:right}
+
+/* HUD pontos jogador */
+.score-hud{
+  display:flex;align-items:center;gap:.85rem;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:.6rem 1rem;margin-bottom:.85rem;
+}
+.hud-left{flex:1;min-width:0}
+.hud-name{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-lbl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hud-pts{font-family:var(--font-display);font-size:1.2rem;font-weight:900;color:var(--cyan)}
+
+/* Fase do blur */
+.blur-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.65rem}
+.b-dots{display:flex;gap:.28rem}
+.b-dot{width:8px;height:8px;border-radius:50%;background:var(--surface3);transition:background .4s,transform .3s}
+.b-dot.done{background:var(--red)}.b-dot.active{background:var(--cyan);transform:scale(1.35)}
+.blur-text{font-size:.7rem;color:var(--muted);flex:1}
+.blur-badge{font-size:.68rem;font-weight:700;padding:.15rem .55rem;border-radius:20px}
+.blur-badge.pct-75{background:rgba(255,61,110,.15);color:var(--red)}
+.blur-badge.pct-50{background:rgba(245,158,11,.15);color:#f59e0b}
+.blur-badge.pct-25{background:rgba(0,229,255,.12);color:var(--cyan)}
+.blur-badge.pct-0{background:var(--green-dim);color:var(--green)}
+
+/* Canvas */
+.img-shell{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);overflow:hidden;
+  margin-bottom:.9rem;aspect-ratio:16/9;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.img-shell canvas{width:100%;height:100%;display:block}
+.img-overlay-label{
+  position:absolute;bottom:.6rem;right:.7rem;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+  color:var(--text2);font-size:.68rem;font-weight:600;
+  border-radius:var(--r-sm);padding:.2rem .55rem;
+  pointer-events:none;
+}
+
+/* Opções */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.opt-btn{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-md);padding:.85rem .8rem;
+  color:var(--text);font-family:var(--font-body);font-size:.9rem;
+  cursor:pointer;text-align:left;font-weight:600;
+  transition:border-color .18s,background .18s,transform .12s,box-shadow .18s;
+  display:flex;align-items:center;gap:.55rem;line-height:1.35;
+}
+.opt-btn:active:not(:disabled){transform:scale(.97)}
+.opt-btn:hover:not(:disabled){border-color:var(--cyan);background:var(--cyan-dim);box-shadow:0 0 0 1px var(--cyan-dim)}
+.opt-key{
+  min-width:24px;height:24px;border-radius:6px;
+  background:var(--surface3);color:var(--muted);
+  font-size:.72rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .18s,color .18s;
+}
+.opt-btn.correct{border-color:var(--green)!important;background:var(--green-dim)!important;box-shadow:0 0 0 1px var(--green-dim)!important}
+.opt-btn.correct .opt-key{background:var(--green);color:#000}
+.opt-btn.wrong{border-color:var(--red)!important;background:var(--red-dim)!important}
+.opt-btn.wrong .opt-key{background:var(--red);color:#fff}
+.opt-btn:disabled{cursor:default;opacity:.75}
+
+/* ═══ REVEAL ═══ */
+.reveal-hero{
+  display:flex;align-items:center;gap:1rem;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:1.25rem;margin-bottom:.85rem;
+}
+.reveal-icon-wrap{
+  width:52px;height:52px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;
+}
+.reveal-icon-wrap.ok{background:var(--green-dim)}
+.reveal-icon-wrap.ko{background:var(--red-dim)}
+.reveal-ans{font-size:1.1rem;font-weight:700;margin-bottom:.2rem}
+.reveal-fact{font-size:.82rem;color:var(--text2);line-height:1.5}
+
+.podium-mini-title{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem}
+.fast-list{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.9rem}
+.fast-card{background:var(--surface2);border-radius:var(--r-md);padding:.6rem .4rem;text-align:center;border:1px solid var(--border)}
+.fc-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.7rem;margin:0 auto .3rem;border:1.5px solid}
+.fc-name{font-size:.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.15rem}
+.fc-pts{font-size:.68rem;color:var(--cyan);font-weight:700}
+
+.action-row{display:flex;gap:.4rem;flex-wrap:wrap}
+.wait-msg{text-align:center;padding:.85rem;font-size:.82rem;color:var(--text2);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;gap:.5rem}
+
+/* ═══ RANKING ═══ */
+.rank-header{text-align:center;padding:1.25rem 1rem 1rem;background:linear-gradient(180deg,var(--cyan-dim),transparent);border:1px solid var(--border);border-radius:var(--r-xl);margin-bottom:.85rem}
+.rank-header .trophy{font-size:2rem;margin-bottom:.3rem}
+.rank-header h2{font-family:var(--font-display);font-size:1.4rem;font-weight:900}
+.rank-header p{font-size:.8rem;color:var(--text2);margin-top:.2rem}
+
+.rank-list{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.85rem}
+.rank-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:.7rem .9rem;
+  display:flex;align-items:center;gap:.65rem;
+  transition:border-color .2s,background .2s;
+}
+.rank-item.r1{border-color:rgba(255,215,0,.35);background:var(--gold-dim)}
+.rank-item.r2{border-color:rgba(192,192,192,.25);background:rgba(192,192,192,.04)}
+.rank-item.r3{border-color:rgba(205,127,50,.25);background:rgba(205,127,50,.04)}
+.rank-item.me{border-color:rgba(0,229,255,.35);background:var(--cyan-dim)}
+.rpos{font-size:1.15rem;font-weight:900;min-width:2ch;text-align:center}
+.rpos.g{color:var(--gold)}.rpos.s{color:#c0c0c0}.rpos.b{color:#cd7f32}
+.rav{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.7rem;flex-shrink:0;border:1.5px solid}
+.rname{flex:1;font-size:.88rem;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rme-tag{font-size:.62rem;color:var(--cyan);background:var(--cyan-dim);border-radius:20px;padding:.1rem .45rem;margin-left:.35rem;flex-shrink:0}
+.rbar-wrap{width:72px;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;flex-shrink:0}
+.rbar{height:100%;background:var(--cyan);border-radius:2px;transition:width .9s cubic-bezier(.23,1,.32,1)}
+.rpts{font-family:var(--font-display);font-weight:700;color:var(--cyan);font-size:.88rem;min-width:52px;text-align:right;flex-shrink:0}
+
+/* ═══ PÓDIO FINAL ═══ */
+.podium-wrap{display:flex;align-items:flex-end;justify-content:center;gap:.4rem;margin:1.5rem 0 1.25rem}
+.pod-slot{display:flex;flex-direction:column;align-items:center;gap:.35rem}
+.pod-av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:900;border:2px solid;background:var(--surface2)}
+.pod-av.p1{width:64px;height:64px;font-size:1.25rem;border-color:var(--gold);background:var(--gold-dim);box-shadow:0 0 24px rgba(255,215,0,.2)}
+.pod-av.p2{width:50px;height:50px;font-size:.95rem;border-color:#c0c0c0}
+.pod-av.p3{width:44px;height:44px;font-size:.88rem;border-color:#cd7f32}
+.pod-name{font-size:.75rem;font-weight:700;text-align:center;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod-bar{width:72px;border-radius:8px 8px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:.3rem;font-size:1.1rem}
+.pod-bar.b1{height:120px;background:linear-gradient(to top,var(--gold-dim),transparent)}
+.pod-bar.b2{height:82px;background:linear-gradient(to top,rgba(192,192,192,.15),transparent)}
+.pod-bar.b3{height:58px;background:linear-gradient(to top,rgba(205,127,50,.15),transparent)}
+
+/* ═══ POINTS POPUP ═══ */
+.pts-pop{
+  position:fixed;top:35%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:var(--cyan);color:#000;
+  font-family:var(--font-display);font-size:2rem;font-weight:900;
+  border-radius:var(--r-lg);padding:.85rem 2rem;
+  z-index:999;pointer-events:none;white-space:nowrap;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 8px 32px var(--cyan-glow);
+}
+.pts-pop.show{transform:translate(-50%,-70%) scale(1)}
+.pts-pop.hide{transform:translate(-50%,-115%) scale(0);opacity:0}
+
+/* ═══ TOAST ═══ */
+.toast{
+  position:fixed;bottom:1.5rem;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--surface3);border:1px solid var(--border2);
+  border-radius:var(--r-md);padding:.7rem 1.25rem;
+  font-size:.85rem;font-weight:500;color:var(--text);
+  transition:transform .3s cubic-bezier(.23,1,.32,1);
+  z-index:1000;pointer-events:none;
+  white-space:nowrap;max-width:88vw;text-align:center;
+  box-shadow:var(--shadow);
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ═══ ADMIN LOGIN ═══ */
+.admin-login-wrap{display:flex;flex-direction:column;justify-content:center;min-height:90dvh;padding:1rem 0}
+
+/* ═══ FINAL HEADER ═══ */
+.final-header{text-align:center;padding:1.5rem 0 .75rem}
+.final-title{font-family:var(--font-display);font-size:2.2rem;font-weight:900;color:var(--gold);line-height:1}
+.final-sub{font-size:.85rem;color:var(--text2);margin-top:.4rem}
+
+/* ═══ SCROLLBAR ═══ */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ═══ AUTO-NEXT BAR ═══ */
+.auto-next-bar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:.85rem 1rem;margin-top:.75rem;
+}
+.anb-info{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
+.anb-info span{font-size:.82rem;color:var(--text2);font-weight:500}
+.anb-counter{font-family:var(--font-display);font-size:.95rem;font-weight:900;color:var(--cyan)!important}
+.anb-track{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.anb-fill{height:100%;background:var(--cyan);border-radius:3px;width:100%;transition:width .2s linear}
+.anb-fill.ranking{background:var(--gold)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ════════════════════════════════════════
+     TELA 1 — HOME (jogador digita só o nome)
+════════════════════════════════════════ -->
+<div id="homeScreen" class="screen active">
+  <div class="logo-area">
+    <div class="logo-mark"><span class="b">BLUR</span><span class="q">QUIZ</span></div>
+    <p class="logo-sub">Adivinha a ferramenta... se conseguires! 🎯</p>
+    <div class="logo-badge" id="roomStatusBadge">Aguardando sala do administrador</div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">Entrar na partida</div>
+    <div class="field">
+      <label>Seu nome</label>
+      <input class="input" type="text" id="playerName"
+        placeholder="Ex: João Silva"
+        maxlength="22"
+        autocomplete="off"
+        autocapitalize="words"
+        inputmode="text"
+        onkeydown="if(event.key==='Enter')enterGame()" />
+      <div class="input-hint" id="nameHint">Apenas seu nome — sem senha necessária</div>
+    </div>
+    <button class="btn btn-primary" onclick="enterGame()">
+      <span>🎮</span> Entrar na sala
+    </button>
+  </div>
+
+  <div id="inviteAlert" class="alert alert-info" style="display:none;margin-bottom:.85rem">
+    <span class="alert-icon">🔗</span>
+    <span>Você foi convidado! Sala <strong id="invitePin"></strong> detectada. Digite seu nome para entrar.</span>
+  </div>
+
+  <div class="divider">administrador</div>
+  <button class="btn btn-ghost" onclick="goAdmin()">
+    <span>⚙️</span> Painel do administrador
+  </button>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TELA 2 — AGUARDANDO (jogador)
+     Atualiza em tempo real via BroadcastChannel
+════════════════════════════════════════ -->
+<div id="waitScreen" class="screen">
+  <div class="wait-wrap">
+    <div class="wait-icon-wrap">⏳</div>
+    <div class="wait-title">Você está na sala!</div>
+    <div class="wait-sub">Aguarde o administrador iniciar o jogo. Deixe esta tela aberta.</div>
+
+    <div class="wait-sala-pill">
+      <div>
+        <div class="sala-label">Código da sala</div>
+        <div class="sala-code" id="waitCode">—</div>
+      </div>
+    </div>
+
+    <div class="wait-you" id="waitYouBadge">
+      <div class="wy-av" id="waitYouAv">?</div>
+      <div class="wy-name" id="waitYouName"></div>
+      <div class="wy-badge">✓ conectado</div>
+    </div>
+
+    <div class="lobby-box">
+      <div class="lobby-hd">
+        <span class="lbl">👥 Jogadores na sala</span>
+        <span class="lobby-count"><span id="lobbyCount">0</span> online</span>
+      </div>
+      <div class="lobby-list" id="lobbyList">
+        <div class="lobby-empty">Carregando...</div>
+      </div>
+    </div>
+
+    <div class="pulse-ring">
+      <div class="pulse-dot"></div>
+      <span>Sincronizando com a sala...</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TELA 3 — LOGIN ADMIN
+════════════════════════════════════════ -->
+<div id="adminLoginScreen" class="screen">
+  <div class="admin-login-wrap">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:2.5rem;margin-bottom:.5rem">🔐</div>
+      <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900">Acesso do Administrador</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-top:.25rem">Somente o responsável da sessão</div>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label>Senha de administrador</label>
+        <input class="input" type="password" id="adminPass"
+          placeholder="••••••••"
+          maxlength="30"
+          onkeydown="if(event.key==='Enter')adminLogin()" />
+      </div>
+      <button class="btn btn-primary" onclick="adminLogin()">Entrar como administrador</button>
+      <button class="btn btn-ghost" onclick="go('homeScreen')">← Voltar</button>
+    </div>
+    <div class="alert alert-info" style="margin-top:.5rem">
+      <span class="alert-icon">💡</span>
+      <span>Senha padrão: <strong>admin123</strong></span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TELA 4 — PAINEL ADMIN
+════════════════════════════════════════ -->
+<div id="hostScreen" class="screen">
+  <div style="padding-top:1.5rem">
+
+    <div class="pin-hero">
+      <div class="pin-label">Código da sala</div>
+      <div class="pin-code" id="displayPin">—</div>
+      <div class="pin-sub">Compartilhe com os participantes para entrar</div>
+    </div>
+
+    <!-- Share -->
+    <div class="card">
+      <div class="card-hd">🔗 Link de convite</div>
+      <div class="share-link-row">
+        <input class="share-link-input" type="text" id="shareLink" readonly />
+        <button class="btn-copy-link" onclick="copyLink()">📋 Copiar</button>
+      </div>
+      <div class="share-social">
+        <button class="social-btn" onclick="shareWA()">💬 WhatsApp</button>
+        <button class="social-btn" onclick="shareTG()">✈️ Telegram</button>
+        <button class="social-btn" id="shareNativeBtn" onclick="shareNative()" style="display:none">📤 Mais</button>
+      </div>
+      <div class="qr-block">
+        <canvas id="qrCanvas" width="90" height="90"></canvas>
+        <p>Escanear para entrar direto</p>
+      </div>
+    </div>
+
+    <!-- Adicionar manualmente -->
+    <div class="card">
+      <div class="card-hd">📝 Adicionar jogador manualmente</div>
+      <div class="add-row">
+        <input class="input" type="text" id="newPlayerName"
+          placeholder="Nome do jogador"
+          maxlength="22"
+          autocapitalize="words"
+          onkeydown="if(event.key==='Enter')addPlayer()" />
+        <button class="btn-add" onclick="addPlayer()">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Jogadores -->
+    <div class="section-hd">
+      <span class="lbl">👥 Jogadores na sala</span>
+      <span class="count-pill" id="playerCount">0</span>
+    </div>
+    <div class="players-grid" id="playersGrid">
+      <div style="grid-column:1/-1;color:var(--muted);font-size:.8rem;padding:.4rem 0">
+        Nenhum jogador ainda. Compartilhe o link acima!
+      </div>
+    </div>
+
+    <div class="alert alert-warn" id="noPlayersWarn" style="margin-bottom:.85rem">
+      <span class="alert-icon">⚠️</span>
+      <span>Adicione ao menos 1 jogador para iniciar o jogo.</span>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn" onclick="startGame()" disabled>
+      ▶ Iniciar jogo
+    </button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TELA 5 — PERGUNTA
+════════════════════════════════════════ -->
+<div id="questionScreen" class="screen">
+  <div style="padding-top:1rem">
+
+    <div class="q-topbar">
+      <div class="q-pill">Q<span id="qNum">1</span>/<span id="qTotal">8</span></div>
+      <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+      <div class="timer-num" id="timerNum">40</div>
+    </div>
+
+    <div class="score-hud" id="scoreHud" style="display:none">
+      <div class="hud-left">
+        <div class="hud-name" id="hudName">—</div>
+        <div class="hud-lbl">jogador</div>
+      </div>
+      <div style="text-align:right">
+        <div class="hud-pts" id="hudPts">0</div>
+        <div class="hud-lbl">pontos</div>
+      </div>
+    </div>
+
+    <div class="blur-row">
+      <div class="b-dots">
+        <div class="b-dot active" id="bd0"></div>
+        <div class="b-dot" id="bd1"></div>
+        <div class="b-dot" id="bd2"></div>
+        <div class="b-dot" id="bd3"></div>
+      </div>
+      <span class="blur-text" id="blurTxt">Bastante desfocado</span>
+      <span class="blur-badge pct-75" id="blurBadge">75%</span>
+    </div>
+
+    <div class="img-shell">
+      <canvas id="imgCanvas" width="800" height="450"></canvas>
+      <div class="img-overlay-label" id="imgLabel">Desvela em <span id="nextRevealIn">20s</span></div>
+    </div>
+
+    <div class="opts-grid" id="optsGrid"></div>
+
+    <!-- Mensagem para jogador quando timeout sem resposta -->
+    <div id="timeoutMsg" style="display:none;margin-top:.75rem">
+      <div class="alert alert-warn">
+        <span class="alert-icon">⏰</span>
+        <span>Tempo esgotado! Aguarde a próxima pergunta.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TELA 6 — REVEAL
+════════════════════════════════════════ -->
+<div id="revealScreen" class="screen">
+  <div style="padding-top:1rem">
+
+    <div class="reveal-hero" id="revealHero">
+      <div class="reveal-icon-wrap" id="revealIconWrap">
+        <span id="revealIcon">✓</span>
+      </div>
+      <div>
+        <div class="reveal-ans" id="revealAns">—</div>
+        <div class="reveal-fact" id="revealFact">—</div>
+      </div>
+    </div>
+
+    <div class="podium-mini-title">⚡ Respostas mais rápidas</div>
+    <div class="fast-list" id="fastList"></div>
+
+    <!-- Auto-avanço para todos quando todos responderam -->
+    <div class="auto-next-bar" id="autoNextBar">
+      <div class="anb-info">
+        <span id="anbMsg">Aguardando respostas...</span>
+        <span class="anb-counter" id="anbCounter"></span>
+      </div>
+      <div class="anb-track"><div class="anb-fill" id="anbFill"></div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TELA 7 — RANKING PARCIAL
+════════════════════════════════════════ -->
+<div id="rankingScreen" class="screen">
+  <div style="padding-top:1rem">
+    <div class="rank-header">
+      <div class="trophy">🏆</div>
+      <h2 id="rankTitle">Ranking</h2>
+      <p id="rankSub">Placar atual</p>
+    </div>
+    <div class="rank-list" id="rankList"></div>
+    <!-- Ranking também avança automaticamente -->
+    <div class="auto-next-bar" id="rankAutoBar">
+      <div class="anb-info">
+        <span id="rankAnbMsg">Próxima rodada em...</span>
+        <span class="anb-counter" id="rankAnbCounter"></span>
+      </div>
+      <div class="anb-track"><div class="anb-fill" id="rankAnbFill"></div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     TELA 8 — FINAL
+════════════════════════════════════════ -->
+<div id="finalScreen" class="screen">
+  <div class="final-header">
+    <div class="final-title">🏁 FIM DE JOGO!</div>
+    <div class="final-sub">Resultado final do BlurQuiz</div>
+  </div>
+  <div class="podium-wrap" id="podium"></div>
+  <div class="section-hd" style="margin-top:.5rem"><span class="lbl">Placar final</span></div>
+  <div class="rank-list" id="finalList"></div>
+  <button class="btn btn-danger" onclick="restartGame()" style="margin-top:.5rem">🔄 Nova partida</button>
+</div>
+
+</div><!-- /#app -->
+
+<div class="pts-pop" id="ptsPop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   QUESTÕES
+═══════════════════════════════════════════════ */
+const QUESTIONS=[
+  {answer:"Git",opts:["Git","SVN","Docker","Jenkins"],fact:"Sistema de controle de versão distribuído mais usado no mundo",
+   draw(c,w,h){c.fillStyle="#f05032";c.fillRect(w*.3,h*.1,w*.4,h*.45);c.fillStyle="#fff";c.font=`bold ${h*.25}px monospace`;c.textAlign="center";c.fillText("git",w/2,h*.42);c.fillStyle="#f05032";c.beginPath();c.arc(w*.5,h*.15,h*.1,0,Math.PI*2);c.fill();c.fillStyle="#fff";c.beginPath();c.arc(w*.5,h*.63,h*.07,0,Math.PI*2);c.fill();c.strokeStyle="#f05032";c.lineWidth=4;c.beginPath();c.moveTo(w*.5,h*.55);c.lineTo(w*.5,h*.75);c.stroke()}},
+  {answer:"Docker",opts:["Kubernetes","Docker","Vagrant","Podman"],fact:"Plataforma líder em containerização de aplicações",
+   draw(c,w,h){c.fillStyle="#2496ed";for(let i=0;i<3;i++)for(let j=0;j<4;j++)c.fillRect(w*.15+j*(w*.15+6),h*.25+i*(h*.12+4),w*.14,h*.11);c.fillStyle="#2496ed";c.beginPath();c.ellipse(w*.5,h*.75,w*.22,h*.08,0,0,Math.PI*2);c.fill();c.fillStyle="#fff";c.beginPath();c.arc(w*.5,h*.75,h*.06,0,Math.PI);c.fill()}},
+  {answer:"Python",opts:["Python","Ruby","Perl","Lua"],fact:"Linguagem conhecida pelo logo de duas cobras entrelaçadas",
+   draw(c,w,h){c.strokeStyle="#3776ab";c.lineWidth=14;c.lineCap="round";c.beginPath();c.moveTo(w*.35,h*.2);c.quadraticCurveTo(w*.2,h*.35,w*.35,h*.5);c.quadraticCurveTo(w*.5,h*.65,w*.65,h*.5);c.stroke();c.strokeStyle="#ffd43b";c.lineWidth=14;c.beginPath();c.moveTo(w*.65,h*.8);c.quadraticCurveTo(w*.8,h*.65,w*.65,h*.5);c.quadraticCurveTo(w*.5,h*.35,w*.35,h*.5);c.stroke();c.fillStyle="#3776ab";c.beginPath();c.arc(w*.35,h*.2,8,0,Math.PI*2);c.fill();c.fillStyle="#ffd43b";c.beginPath();c.arc(w*.65,h*.8,8,0,Math.PI*2);c.fill()}},
+  {answer:"VS Code",opts:["VS Code","Atom","Sublime","WebStorm"],fact:"Editor de código mais baixado do mundo pela Microsoft",
+   draw(c,w,h){c.fillStyle="#0078d4";c.beginPath();c.moveTo(w*.5,h*.1);c.lineTo(w*.75,h*.25);c.lineTo(w*.75,h*.75);c.lineTo(w*.5,h*.9);c.lineTo(w*.25,h*.75);c.lineTo(w*.25,h*.25);c.closePath();c.fill();c.strokeStyle="#fff";c.lineWidth=5;c.lineCap="round";c.beginPath();c.moveTo(w*.37,h*.45);c.lineTo(w*.47,h*.55);c.lineTo(w*.63,h*.38);c.stroke()}},
+  {answer:"Linux",opts:["Linux","FreeBSD","Unix","Solaris"],fact:"Sistema operacional open source com mascote Tux, o pinguim",
+   draw(c,w,h){c.fillStyle="#333";c.beginPath();c.ellipse(w*.5,h*.45,w*.22,h*.32,0,0,Math.PI*2);c.fill();c.fillStyle="#ffd700";c.beginPath();c.arc(w*.43,h*.35,h*.06,0,Math.PI*2);c.fill();c.beginPath();c.arc(w*.57,h*.35,h*.06,0,Math.PI*2);c.fill();c.fillStyle="#ff9900";c.beginPath();c.arc(w*.5,h*.47,h*.04,0,Math.PI);c.fill();c.fillStyle="#333";c.beginPath();c.ellipse(w*.5,h*.72,w*.18,h*.14,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(w*.36,h*.78);c.lineTo(w*.3,h*.88);c.lineTo(w*.43,h*.85);c.closePath();c.fill();c.beginPath();c.moveTo(w*.64,h*.78);c.lineTo(w*.7,h*.88);c.lineTo(w*.57,h*.85);c.closePath();c.fill()}},
+  {answer:"React",opts:["React","Vue","Angular","Svelte"],fact:"Biblioteca JavaScript para interfaces criada pelo Facebook",
+   draw(c,w,h){c.strokeStyle="#61dafb";c.lineWidth=5;for(let a=0;a<3;a++){c.beginPath();c.ellipse(w*.5,h*.5,w*.32,h*.14,a*Math.PI/3,0,Math.PI*2);c.stroke()}c.fillStyle="#61dafb";c.beginPath();c.arc(w*.5,h*.5,h*.05,0,Math.PI*2);c.fill()}},
+  {answer:"GitHub",opts:["GitHub","GitLab","Bitbucket","Gitea"],fact:"Maior plataforma de hospedagem de código do mundo",
+   draw(c,w,h){c.fillStyle="#24292e";c.beginPath();c.arc(w*.5,h*.5,h*.35,0,Math.PI*2);c.fill();c.fillStyle="#fff";c.beginPath();c.arc(w*.5,h*.4,h*.14,0,Math.PI*2);c.fill();c.beginPath();c.arc(w*.37,h*.35,h*.08,0,Math.PI*2);c.fill();c.beginPath();c.arc(w*.63,h*.35,h*.08,0,Math.PI*2);c.fill();c.fillStyle="#24292e";c.beginPath();c.arc(w*.5,h*.4,h*.08,0,Math.PI*2);c.fill();c.beginPath();c.arc(w*.37,h*.35,h*.04,0,Math.PI*2);c.fill();c.beginPath();c.arc(w*.63,h*.35,h*.04,0,Math.PI*2);c.fill();c.fillStyle="#fff";c.fillRect(w*.42,h*.5,w*.16,h*.15);c.beginPath();c.moveTo(w*.42,h*.65);c.lineTo(w*.37,h*.75);c.lineTo(w*.42,h*.72);c.closePath();c.fill();c.beginPath();c.moveTo(w*.58,h*.65);c.lineTo(w*.63,h*.75);c.lineTo(w*.58,h*.72);c.closePath();c.fill()}},
+  {answer:"Kubernetes",opts:["Kubernetes","Terraform","Ansible","Helm"],fact:"Orquestrador de containers open source criado pelo Google",
+   draw(c,w,h){c.strokeStyle="#326ce5";c.lineWidth=4;const cx=w*.5,cy=h*.5,r=h*.3;c.beginPath();for(let i=0;i<7;i++){const a=i*Math.PI*2/7-Math.PI/2;i?c.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):c.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a))}c.closePath();c.stroke();c.fillStyle="#326ce5";c.beginPath();c.arc(cx,cy,h*.1,0,Math.PI*2);c.fill();c.strokeStyle="#326ce5";c.lineWidth=3;for(let i=0;i<7;i++){const a=i*Math.PI*2/7-Math.PI/2;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+r*.65*Math.cos(a),cy+r*.65*Math.sin(a));c.stroke()}}}
+];
+
+/* ═══════════════════════════════════════════════
+   CONFIGURAÇÕES
+═══════════════════════════════════════════════ */
+const ADMIN_PASS  = "admin123";
+const COLORS      = ['#00e5ff','#ff3d6e','#a855f7','#22c55e','#f59e0b','#f97316','#3b82f6','#ec4899','#14b8a6','#8b5cf6','#ef4444','#84cc16'];
+const BLUR_PHASES = [75,50,25,0];
+const BLUR_LABELS = ["Bastante desfocado","Parcialmente visível","Quase revelado","Revelado!"];
+const BLUR_BADGES = ["pct-75","pct-50","pct-25","pct-0"];
+const BLUR_BADGE_TXT=["75%","50%","25%","0%"];
+const TIMER_TOTAL = 40;
+const PHASE_BONUS = [20,12,6,0];
+const STORAGE_KEY = "blurquiz_room";
+
+/* ═══════════════════════════════════════════════
+   COMUNICAÇÃO ENTRE ABAS — BroadcastChannel
+   Resolve o problema de sincronização em tempo real:
+   quando jogador entra no celular, o admin vê na tela
+═══════════════════════════════════════════════ */
+const BC = typeof BroadcastChannel !== 'undefined'
+  ? new BroadcastChannel('blurquiz')
+  : null;
+
+/* ═══════════════════════════════════════════════
+   SALA — estado compartilhado via localStorage
+═══════════════════════════════════════════════ */
+function loadRoom(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||null}catch{return null}
+}
+function saveRoom(r){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(r))}catch{}
+  // Notifica outras abas
+  if(BC) BC.postMessage({type:'room_update',room:r});
+}
+function getRoom(){return loadRoom()}
+
+function createRoom(){
+  const pin=String(Math.floor(1000+Math.random()*8999));
+  const r={pin,started:false,players:[],currentQ:0,gamePhase:'lobby'};
+  saveRoom(r);return r;
+}
+
+/* ═══════════════════════════════════════════════
+   ESTADO LOCAL DA SESSÃO
+═══════════════════════════════════════════════ */
+let ST={
+  role:null,playerName:'',playerScore:0,
+  currentQ:0,answered:false,
+  blurPhase:0,blurLevel:75,
+  timer:null,timerVal:TIMER_TOTAL,blurTimer:null,
+  revealCountdown:null,
+};
+
+/* ═══════════════════════════════════════════════
+   UTILITÁRIOS
+═══════════════════════════════════════════════ */
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toast(msg,dur=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function showPts(pts){
+  const p=document.getElementById('ptsPop');
+  p.textContent=`+${pts} pts!`;
+  p.classList.remove('hide');p.classList.add('show');
+  clearTimeout(p._t);
+  p._t=setTimeout(()=>{p.classList.remove('show');p.classList.add('hide')},1800);
+}
+
+function ini(name){
+  return name.trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'??';
+}
+
+/* ═══════════════════════════════════════════════
+   INICIALIZAÇÃO — detecta link de convite
+═══════════════════════════════════════════════ */
+(function init(){
+  try{
+    const params=new URLSearchParams(window.location.search);
+    const sala=params.get('sala');
+    if(sala){
+      const r=getRoom();
+      if(r&&r.pin===sala){
+        // Sala existe e bate com o convite
+        document.getElementById('inviteAlert').style.display='flex';
+        document.getElementById('invitePin').textContent=sala;
+        document.getElementById('roomStatusBadge').textContent=`Sala ${sala} disponível — entre agora!`;
+        document.getElementById('roomStatusBadge').style.color='var(--cyan)';
+      } else {
+        document.getElementById('inviteAlert').style.display='flex';
+        document.getElementById('invitePin').textContent=sala;
+      }
+      setTimeout(()=>document.getElementById('playerName').focus(),350);
+    } else {
+      // Verifica se já existe sala ativa
+      const r=getRoom();
+      if(r&&!r.started){
+        document.getElementById('roomStatusBadge').textContent=`Sala ${r.pin} aguardando jogadores`;
+        document.getElementById('roomStatusBadge').style.color='var(--cyan)';
+      }
+    }
+  }catch(e){}
+
+  // Escuta atualizações de outras abas
+  if(BC){
+    BC.onmessage=(e)=>{
+      const{type,room}=e.data||{};
+      if(type==='room_update'&&room){
+        const active=document.querySelector('.screen.active')?.id;
+
+        // Lobby: atualiza lista de jogadores em tempo real
+        if(active==='waitScreen') refreshLobby();
+        if(active==='hostScreen') refreshAdminPlayers();
+
+        // Jogador na espera: admin iniciou o jogo
+        if(room.started&&room.gamePhase==='question'&&active==='waitScreen'){
+          ST.currentQ=room.currentQ||0;
+          setupQuestionHUD();
+          go('questionScreen');
+          renderQuestion();
+        }
+
+        // Todos na tela de pergunta: admin/outro jogador respondeu, atualiza contador
+        if(active==='revealScreen'){
+          // Atualiza contador de quem respondeu
+          const r=room;
+          const totalPlayers=r?.players?.length||1;
+          const answered=(r?.answeredThisRound||[]).filter(k=>k!=='__admin__').length;
+          const ctr=document.getElementById('anbCounter');
+          const msg=document.getElementById('anbMsg');
+          if(ctr) ctr.textContent=`${answered}/${totalPlayers}`;
+          if(answered>=totalPlayers&&msg) msg.textContent='Todos responderam! Aguardando o administrador para avançar.';
+        }
+
+        // Sync de fase: ranking ou próxima pergunta iniciado por outra aba
+        const active2=document.querySelector('.screen.active')?.id;
+
+        if(room.currentQ!==undefined){
+          if(room.gamePhase==='ranking'){
+            // Altera para ranking quando sala mudou de pergunta para fase de placar
+            ST.currentQ=room.currentQ;
+            clearInterval(_autoNextInterval);clearTimeout(_autoNextTimer);
+            clearInterval(_rankAutoInterval);clearTimeout(_rankAutoTimer);
+            showRanking(false);
+          } else if(room.gamePhase==='question'){
+            if(active2==='rankingScreen' && room.currentQ===ST.currentQ){
+              // Admin autorizou continuar do ranking para próxima pergunta
+              continueFromRanking();
+            } else if(room.currentQ>ST.currentQ){
+              clearInterval(_autoNextInterval);clearTimeout(_autoNextTimer);
+              clearInterval(_rankAutoInterval);clearTimeout(_rankAutoTimer);
+              ST.currentQ=room.currentQ;
+              if(room.currentQ>=QUESTIONS.length){showFinal();return}
+              if(room.currentQ%2===0){
+                showRanking(false);
+              } else {
+                setupQuestionHUD();go('questionScreen');renderQuestion();
+              }
+            }
+          }
+        }
+
+        if(room.gamePhase==='finished'){
+          showFinal();
+        }
+      }
+    };
+  }
+
+  // Polling leve para dispositivos sem BroadcastChannel (fallback)
+  setInterval(()=>{
+    const active=document.querySelector('.screen.active')?.id;
+    if(active==='waitScreen') refreshLobby();
+    if(active==='hostScreen') refreshAdminPlayers();
+  },2000);
+})();
+
+/* ═══════════════════════════════════════════════
+   ENTRAR NO JOGO (jogador)
+═══════════════════════════════════════════════ */
+function enterGame(){
+  const name=document.getElementById('playerName').value.trim();
+  if(!name){toast('✏️ Digite seu nome para entrar!');return}
+
+  const r=getRoom();
+  if(!r){toast('❌ Nenhuma sala ativa. Aguarde o administrador criar a sala.');return}
+  if(r.started){toast('🎮 O jogo já está em andamento! Aguarde a próxima partida.');return}
+  if(r.players.find(p=>p.name.toLowerCase()===name.toLowerCase())){
+    toast('👤 Este nome já está em uso! Escolha outro.');return;
+  }
+
+  const color=COLORS[r.players.length%COLORS.length];
+  r.players.push({name,score:0,color,lastCorrect:false,answerTime:0,joinedAt:Date.now()});
+  saveRoom(r);
+
+  ST.role='player';
+  ST.playerName=name;
+  ST.playerScore=0;
+
+  // Configura tela de espera
+  document.getElementById('waitCode').textContent=r.pin;
+  document.getElementById('waitYouName').textContent=name;
+  const av=document.getElementById('waitYouAv');
+  av.textContent=ini(name);
+  const color2=r.players.find(p=>p.name===name)?.color||COLORS[0];
+  av.style.borderColor=color2;
+  av.style.color=color2;
+  av.style.background=color2+'18';
+
+  refreshLobby();
+  go('waitScreen');
+  toast(`🎉 Bem-vindo, ${name}! Aguarde o início.`,4000);
+}
+
+/* Atualiza a lista do lobby (sala de espera) */
+function refreshLobby(){
+  const r=getRoom();
+  if(!r) return;
+
+  const list=document.getElementById('lobbyList');
+  const cnt=document.getElementById('lobbyCount');
+  cnt.textContent=r.players.length;
+
+  if(!r.players.length){
+    list.innerHTML='<div class="lobby-empty">Aguardando participantes...</div>';
+    return;
+  }
+
+  list.innerHTML='';
+  r.players.forEach((p,i)=>{
+    const isMe=p.name===ST.playerName;
+    const d=document.createElement('div');
+    d.className='lobby-item';
+    d.style.animationDelay=`${i*40}ms`;
+    d.innerHTML=`
+      <div class="lobby-av" style="border-color:${p.color};color:${p.color};background:${p.color}18">${ini(p.name)}</div>
+      <span class="lobby-name">${p.name}</span>
+      ${isMe?'<span class="lobby-you-tag">você</span>':'<span class="lobby-tag">online</span>'}`;
+    list.appendChild(d);
+  });
+}
+
+/* Sync automático: quando admin inicia o jogo */
+function handleGameStarted(){
+  ST.currentQ=0;
+  setupQuestionHUD();
+  go('questionScreen');
+  renderQuestion();
+}
+
+function syncPlayerToPhase(room){
+  // Usado para manter jogadores sincronizados (extensão futura)
+}
+
+/* ═══════════════════════════════════════════════
+   ADMIN LOGIN
+═══════════════════════════════════════════════ */
+function goAdmin(){
+  go('adminLoginScreen');
+  setTimeout(()=>document.getElementById('adminPass').focus(),200);
+}
+
+function adminLogin(){
+  const pass=document.getElementById('adminPass').value;
+  if(pass!==ADMIN_PASS){
+    toast('❌ Senha incorreta!');
+    document.getElementById('adminPass').value='';
+    return;
+  }
+  document.getElementById('adminPass').value='';
+  ST.role='admin';
+  initAdminRoom();
+}
+
+/* ═══════════════════════════════════════════════
+   INICIALIZAR SALA (admin)
+═══════════════════════════════════════════════ */
+function initAdminRoom(){
+  let r=getRoom();
+  // Reutiliza sala existente ou cria nova
+  if(!r||r.started) r=createRoom();
+
+  document.getElementById('displayPin').textContent=r.pin;
+
+  const base=window.location.href.split('?')[0].replace(/#.*/,'');
+  const link=`${base}?sala=${r.pin}`;
+  document.getElementById('shareLink').value=link;
+  r.shareLink=link;
+  saveRoom(r);
+
+  if(navigator.share) document.getElementById('shareNativeBtn').style.display='flex';
+  buildQR(link);
+  refreshAdminPlayers();
+  go('hostScreen');
+}
+
+/* Atualiza grid de jogadores no painel admin */
+function refreshAdminPlayers(){
+  const r=getRoom();
+  const grid=document.getElementById('playersGrid');
+  const cnt=document.getElementById('playerCount');
+  const warn=document.getElementById('noPlayersWarn');
+  const startBtn=document.getElementById('startBtn');
+
+  if(!r||!r.players.length){
+    cnt.textContent='0';
+    grid.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:.78rem;padding:.4rem 0">Nenhum jogador ainda. Compartilhe o link acima!</div>';
+    warn.style.display='flex';
+    startBtn.disabled=true;
+    return;
+  }
+
+  cnt.textContent=r.players.length;
+  warn.style.display='none';
+  startBtn.disabled=false;
+
+  // Apenas re-renderiza se mudou
+  const existing=grid.querySelectorAll('.p-chip');
+  if(existing.length!==r.players.length){
+    grid.innerHTML='';
+    r.players.forEach(p=>{
+      const chip=document.createElement('div');
+      chip.className='p-chip';
+      chip.innerHTML=`
+        <div class="p-av" style="border-color:${p.color};color:${p.color};background:${p.color}18">
+          ${ini(p.name)}
+          <div class="online-dot"></div>
+        </div>
+        <div class="pname">${p.name.split(' ')[0]}</div>
+        <div class="pscore">${p.score} pts</div>`;
+      grid.appendChild(chip);
+    });
+  } else {
+    // Atualiza só os scores (mais eficiente)
+    existing.forEach((chip,i)=>{
+      const sc=chip.querySelector('.pscore');
+      if(sc&&r.players[i]) sc.textContent=r.players[i].score+' pts';
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ADICIONAR MANUALMENTE (admin)
+═══════════════════════════════════════════════ */
+function addPlayer(){
+  const inp=document.getElementById('newPlayerName');
+  const name=inp.value.trim();
+  if(!name){toast('✏️ Digite o nome do jogador!');return}
+
+  const r=getRoom();
+  if(!r){toast('❌ Sem sala ativa.');return}
+  if(r.players.find(p=>p.name.toLowerCase()===name.toLowerCase())){
+    toast('👤 Nome já cadastrado!');return;
+  }
+
+  const color=COLORS[r.players.length%COLORS.length];
+  r.players.push({name,score:0,color,lastCorrect:false,answerTime:0,joinedAt:Date.now()});
+  saveRoom(r);
+
+  inp.value='';inp.focus();
+  refreshAdminPlayers();
+  toast(`✅ ${name} adicionado!`);
+}
+
+/* ═══════════════════════════════════════════════
+   COMPARTILHAMENTO
+═══════════════════════════════════════════════ */
+function copyLink(){
+  const link=document.getElementById('shareLink').value;
+  navigator.clipboard.writeText(link)
+    .then(()=>toast('🔗 Link copiado!'))
+    .catch(()=>{
+      try{document.getElementById('shareLink').select();document.execCommand('copy');toast('🔗 Link copiado!')}
+      catch{toast('Copie: '+link)}
+    });
+}
+
+function shareWA(){
+  const r=getRoom();const link=document.getElementById('shareLink').value;
+  const msg=encodeURIComponent(`🎮 *BlurQuiz* — Adivinha a ferramenta!\nEntre com o código *${r?.pin}*:\n${link}`);
+  window.open(`https://wa.me/?text=${msg}`,'_blank');
+}
+
+function shareTG(){
+  const r=getRoom();const link=document.getElementById('shareLink').value;
+  window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`🎮 BlurQuiz — sala ${r?.pin}`)}`,'_blank');
+}
+
+function shareNative(){
+  const r=getRoom();const link=document.getElementById('shareLink').value;
+  navigator.share&&navigator.share({title:'BlurQuiz',text:`Entre na sala ${r?.pin}`,url:link}).catch(()=>{});
+}
+
+function buildQR(url){
+  const canvas=document.getElementById('qrCanvas');
+  const ctx=canvas.getContext('2d');
+  const sz=90;canvas.width=sz;canvas.height=sz;
+  const img=new Image();img.crossOrigin='anonymous';
+  img.onload=()=>{ctx.clearRect(0,0,sz,sz);ctx.drawImage(img,0,0,sz,sz)};
+  img.onerror=()=>{
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,sz,sz);
+    ctx.fillStyle='#111';ctx.font='bold 11px monospace';ctx.textAlign='center';
+    ctx.fillText('QR',sz/2,sz/2-6);ctx.fillText(getRoom()?.pin||'—',sz/2,sz/2+10);
+  };
+  img.src=`https://api.qrserver.com/v1/create-qr-code/?size=${sz}x${sz}&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=111111&margin=4`;
+}
+
+/* ═══════════════════════════════════════════════
+   INICIAR JOGO (admin)
+═══════════════════════════════════════════════ */
+function startGame(){
+  const r=getRoom();
+  if(!r||!r.players.length){toast('⚠️ Adicione ao menos 1 jogador!');return}
+
+  r.players.forEach(p=>{p.score=0;p.lastCorrect=false});
+  r.started=true;
+  r.gamePhase='question';
+  r.currentQ=0;
+  r.answeredThisRound=[];
+  saveRoom(r);
+
+  ST.currentQ=0;ST.playerScore=0;
+  setupQuestionHUD();
+  go('questionScreen');
+  renderQuestion();
+
+  if(BC) BC.postMessage({type:'room_update',room:r});
+}
+
+function setupQuestionHUD(){
+  if(ST.role==='player'){
+    document.getElementById('scoreHud').style.display='flex';
+    document.getElementById('hudName').textContent=ST.playerName;
+    document.getElementById('hudPts').textContent=ST.playerScore;
+  } else {
+    document.getElementById('scoreHud').style.display='none';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RENDERIZAR PERGUNTA
+═══════════════════════════════════════════════ */
+function renderQuestion(){
+  const q=QUESTIONS[ST.currentQ];
+  document.getElementById('qNum').textContent=ST.currentQ+1;
+  document.getElementById('qTotal').textContent=QUESTIONS.length;
+  ST.answered=false;
+  ST.blurPhase=0;
+  ST.blurLevel=BLUR_PHASES[0];
+  document.getElementById('timeoutMsg').style.display='none';
+  updateBlurUI();
+  clearTimeout(ST.blurTimer);
+
+  // Renderiza opções
+  const grid=document.getElementById('optsGrid');
+  grid.innerHTML='';
+  ['A','B','C','D'].forEach((k,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-key">${k}</span>${q.opts[i]}`;
+    if(ST.role !== 'admin'){
+      btn.onclick=()=>pickAnswer(i);
+    } else {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.title = 'Admin não responde perguntas';
+    }
+    grid.appendChild(btn);
+  });
+
+  drawCanvas();
+  startTimer();
+  scheduleBlur();
+}
+
+/* ═══════════════════════════════════════════════
+   DESFOQUE 75%→50%→25%→0% (a cada 20s)
+═══════════════════════════════════════════════ */
+let _revealCountdown=null;
+
+function scheduleBlur(){
+  clearTimeout(ST.blurTimer);
+  clearInterval(_revealCountdown);
+  if(ST.answered||ST.blurPhase>=BLUR_PHASES.length-1) return;
+
+  // Contador regressivo do próximo desfoque
+  let secondsLeft=20;
+  const lbl=document.getElementById('nextRevealIn');
+  if(lbl) lbl.textContent=`${secondsLeft}s`;
+  _revealCountdown=setInterval(()=>{
+    secondsLeft--;
+    if(lbl) lbl.textContent=`${Math.max(0,secondsLeft)}s`;
+    if(secondsLeft<=0) clearInterval(_revealCountdown);
+  },1000);
+
+  ST.blurTimer=setTimeout(()=>{
+    clearInterval(_revealCountdown);
+    if(ST.answered) return;
+    ST.blurPhase++;
+    ST.blurLevel=BLUR_PHASES[ST.blurPhase];
+    updateBlurUI();
+    drawCanvas();
+    scheduleBlur();
+  },20000);
+}
+
+function updateBlurUI(){
+  ['bd0','bd1','bd2','bd3'].forEach((id,i)=>{
+    const d=document.getElementById(id);
+    d.classList.remove('active','done');
+    if(i===ST.blurPhase) d.classList.add('active');
+    else if(i<ST.blurPhase) d.classList.add('done');
+  });
+  document.getElementById('blurTxt').textContent=BLUR_LABELS[ST.blurPhase]||'Revelado!';
+
+  const badge=document.getElementById('blurBadge');
+  badge.className='blur-badge '+BLUR_BADGES[ST.blurPhase];
+  badge.textContent=BLUR_BADGE_TXT[ST.blurPhase];
+
+  // Esconde label do overlay quando revelado
+  const ovl=document.getElementById('imgLabel');
+  if(ovl) ovl.style.display=ST.blurPhase>=BLUR_PHASES.length-1?'none':'block';
+}
+
+function drawCanvas(){
+  const canvas=document.getElementById('imgCanvas');
+  const ctx=canvas.getContext('2d');
+  const q=QUESTIONS[ST.currentQ];
+  const px=Math.round((ST.blurLevel/100)*28);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.filter=px>0?`blur(${px}px)`:'none';
+  q.draw(ctx,canvas.width,canvas.height);
+  ctx.filter='none';
+}
+
+/* ═══════════════════════════════════════════════
+   TIMER 40s
+═══════════════════════════════════════════════ */
+function startTimer(){
+  clearInterval(ST.timer);
+  ST.timerVal=TIMER_TOTAL;
+  document.getElementById('timerFill').style.width='100%';
+  document.getElementById('timerFill').style.background='var(--cyan)';
+  document.getElementById('timerNum').textContent=TIMER_TOTAL;
+
+  ST.timer=setInterval(()=>{
+    ST.timerVal--;
+    const pct=(ST.timerVal/TIMER_TOTAL)*100;
+    const fill=document.getElementById('timerFill');
+    fill.style.width=pct+'%';
+    fill.style.background=pct>50?'var(--cyan)':pct>25?'#f59e0b':'var(--red)';
+    document.getElementById('timerNum').textContent=ST.timerVal;
+    document.getElementById('timerNum').style.color=pct>25?'var(--cyan)':'var(--red)';
+
+    if(ST.timerVal<=0){
+      clearInterval(ST.timer);
+      if(!ST.answered){
+        // Marca quem não respondeu como "respondido por timeout"
+        const r=getRoom();
+        if(r){
+          if(!r.answeredThisRound) r.answeredThisRound=[];
+          // Marca todos os jogadores como respondidos (timeout geral)
+          r.players.forEach(p=>{
+            if(!r.answeredThisRound.includes(p.name))
+              r.answeredThisRound.push(p.name);
+          });
+          saveRoom(r);
+        }
+        revealAnswer(-1);
+      }
+    }
+  },1000);
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONDER
+═══════════════════════════════════════════════ */
+function pickAnswer(idx){
+  if(ST.answered) return;
+  ST.answered=true;
+  clearInterval(ST.timer);
+  clearTimeout(ST.blurTimer);
+  clearInterval(_revealCountdown);
+  revealAnswer(idx);
+}
+
+function revealAnswer(selIdx){
+  const q=QUESTIONS[ST.currentQ];
+  const corrIdx=q.opts.indexOf(q.answer);
+  const isCorrect=selIdx===corrIdx;
+  const timedOut=selIdx===-1;
+
+  // Revela imagem completamente
+  ST.blurLevel=0;drawCanvas();
+  updateBlurUI();
+
+  // Marca botões
+  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===corrIdx) b.classList.add('correct');
+    else if(i===selIdx) b.classList.add('wrong');
+  });
+
+  if(timedOut) document.getElementById('timeoutMsg').style.display='block';
+
+  // Pontuação
+  const r=getRoom();
+  if(isCorrect){
+    const bonus=PHASE_BONUS[ST.blurPhase]||0;
+    const pts=5+bonus;
+    if(ST.role==='player'){
+      ST.playerScore+=pts;
+      document.getElementById('hudPts').textContent=ST.playerScore;
+      const me=r?.players.find(p=>p.name===ST.playerName);
+      if(me) me.score=ST.playerScore;
+      showPts(pts);
+    }
+    r?.players.forEach(p=>{
+      if(p.name===ST.playerName) return;
+      if(Math.random()<.55) p.score+=5+Math.floor(Math.random()*Math.max(PHASE_BONUS[ST.blurPhase]||0,2));
+    });
+  } else {
+    r?.players.forEach(p=>{
+      if(p.name===ST.playerName) return;
+      if(Math.random()<.5) p.score+=5+Math.floor(Math.random()*12);
+    });
+  }
+
+  // Registra que este jogador/admin respondeu nesta rodada
+  if(r){
+    if(!r.answeredThisRound) r.answeredThisRound=[];
+    const key=ST.role==='admin'?'__admin__':ST.playerName;
+    if(!r.answeredThisRound.includes(key)) r.answeredThisRound.push(key);
+
+    // Simula tempos dos outros jogadores
+    r.players.forEach(p=>{
+      p.lastCorrect=Math.random()<.58;
+      p.answerTime=Math.random()*36+1;
+    });
+    if(ST.role==='player'){
+      const me=r.players.find(p=>p.name===ST.playerName);
+      if(me){me.lastCorrect=isCorrect;me.answerTime=TIMER_TOTAL-ST.timerVal+.5;}
+    }
+
+    saveRoom(r);
+  }
+
+  // Mostra reveal imediatamente para quem respondeu
+  setTimeout(()=>showReveal(isCorrect,q),1400);
+}
+
+/* ═══════════════════════════════════════════════
+   REVEAL — todos veem e aguarda auto-avanço
+═══════════════════════════════════════════════ */
+let _autoNextTimer=null;
+let _autoNextInterval=null;
+
+function showReveal(isCorrect,q){
+  const iconWrap=document.getElementById('revealIconWrap');
+  const icon=document.getElementById('revealIcon');
+  iconWrap.className='reveal-icon-wrap '+(isCorrect?'ok':'ko');
+  icon.textContent=isCorrect?'✓':'✗';
+  document.getElementById('revealAns').textContent='Resposta: '+q.answer;
+  document.getElementById('revealFact').textContent=q.fact;
+
+  const r=getRoom();
+  const fastest=(r?.players||[]).filter(p=>p.lastCorrect).sort((a,b)=>a.answerTime-b.answerTime).slice(0,3);
+  const fl=document.getElementById('fastList');
+  fl.innerHTML='';
+  if(!fastest.length){
+    fl.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:.8rem;text-align:center;padding:.5rem">Nenhum acerto nesta rodada</div>';
+  }
+  fastest.forEach(p=>{
+    const d=document.createElement('div');d.className='fast-card';
+    d.innerHTML=`<div class="fc-av" style="border-color:${p.color};color:${p.color};background:${p.color}18">${ini(p.name)}</div>
+    <div class="fc-name">${p.name.split(' ')[0]}</div><div class="fc-pts">+5 pts</div>`;
+    fl.appendChild(d);
+  });
+
+  go('revealScreen');
+
+  const totalPlayers=(r?.players?.length)||1;
+  const answered=(r?.answeredThisRound||[]).filter(k=>k!=='__admin__').length;
+  document.getElementById('anbCounter').textContent=`${answered}/${totalPlayers}`;
+  document.getElementById('anbFill').style.width='100%';
+
+  const info=document.querySelector('.anb-info');
+  const adminBtn=document.getElementById('adminNextBtn');
+  if(adminBtn) adminBtn.remove();
+
+  if(ST.role === 'admin'){
+    document.getElementById('anbMsg').textContent='Admin: clique em Avançar quando todos responderem';
+    if(!document.getElementById('adminNextBtn')){
+      const btn=document.createElement('button');
+      btn.id='adminNextBtn';
+      btn.className='btn btn-sm btn-primary';
+      btn.style.marginLeft='1rem';
+      btn.textContent='Avançar';
+      btn.onclick=adminNextQuestion;
+      info.appendChild(btn);
+    }
+  } else {
+    document.getElementById('anbMsg').textContent='⏳ Aguardando o administrador liberar a próxima pergunta...';
+  }
+}
+
+/* ── Auto-avanço: espera todos responderem ou 8s de timeout ── */
+function startAutoNext(r){
+  clearTimeout(_autoNextTimer);
+  clearInterval(_autoNextInterval);
+
+  const fill=document.getElementById('anbFill');
+  const msg=document.getElementById('anbMsg');
+  const ctr=document.getElementById('anbCounter');
+
+  // Total esperado = todos os jogadores (admin não joga, não conta)
+  const totalPlayers=(r?.players?.length)||1;
+
+  // Contagem ao vivo lendo do localStorage
+  const getAnsweredCount=()=>{
+    const fresh=getRoom();
+    const list=fresh?.answeredThisRound||[];
+    // Conta apenas nomes de jogadores (exclui __admin__)
+    return list.filter(k=>k!=='__admin__').length;
+  };
+
+  const WAIT_MAX=8; // segundos máximos de espera após o primeiro revelar
+  let elapsed=0;
+
+  fill.style.width='0%';
+
+  function tick(){
+    const answered=getAnsweredCount();
+    const allDone=answered>=totalPlayers;
+    const pct=Math.min(100,(elapsed/WAIT_MAX)*100);
+
+    fill.style.width=pct+'%';
+
+    if(allDone){
+      msg.textContent='🎉 Todos responderam! Avançando...';
+      ctr.textContent=`${answered}/${totalPlayers}`;
+    } else if(elapsed>=WAIT_MAX){
+      msg.textContent='⏰ Tempo esgotado. Avançando...';
+      ctr.textContent=`${answered}/${totalPlayers}`;
+    } else {
+      msg.textContent='Aguardando respostas...';
+      ctr.textContent=`${answered}/${totalPlayers} responderam`;
+    }
+
+    if(allDone||elapsed>=WAIT_MAX){
+      clearInterval(_autoNextInterval);
+      fill.style.width='100%';
+      setTimeout(()=>nextQuestion(),700);
+    }
+  }
+
+  tick();
+  _autoNextInterval=setInterval(()=>{elapsed+=.2;tick();},200);
+}
+
+function adminNextQuestion(){
+  const r=getRoom();
+  if(!r){toast('⚠️ Sala não encontrada.');return}
+
+  const totalPlayers=(r.players||[]).length;
+  const answered=(r.answeredThisRound||[]).filter(k=>k!=='__admin__').length;
+
+  if(answered<totalPlayers){
+    toast(`⚠️ Aguardando todos responderem (${answered}/${totalPlayers}).`);
+    return;
+  }
+
+  nextQuestion();
+}
+
+/* ═══════════════════════════════════════════════
+   PRÓXIMA PERGUNTA — automático para todos
+═══════════════════════════════════════════════ */
+function nextQuestion(){
+  clearTimeout(_autoNextTimer);
+  clearInterval(_autoNextInterval);
+  clearTimeout(_rankAutoTimer);
+  clearInterval(_rankAutoInterval);
+
+  ST.currentQ++;
+  const r=getRoom();
+  if(r){
+    r.currentQ=ST.currentQ;
+    r.answeredThisRound=[];  // Reseta contagem de respostas
+    r.gamePhase='question';
+    // Temporariamente atualiza como question; se for ranking, regravaremos
+    saveRoom(r);
+  }
+
+  if(ST.currentQ>=QUESTIONS.length){showFinal();return}
+
+  // Ranking a cada 2 rodadas
+  if(ST.currentQ%2===0){
+    if(r){
+      r.gamePhase='ranking';
+      saveRoom(r);
+    }
+    showRanking(true);
+  } else {
+    if(r){
+      r.gamePhase='question';
+      saveRoom(r);
+    }
+    go('questionScreen');
+    setupQuestionHUD();
+    renderQuestion();
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RANKING — exibe por 6s e avança automaticamente
+═══════════════════════════════════════════════ */
+let _rankAutoTimer=null;
+let _rankAutoInterval=null;
+
+function showRanking(auto){
+  const rnd=ST.currentQ;
+  document.getElementById('rankTitle').textContent=auto?`Rodada ${rnd} concluída`:'Ranking atual';
+  document.getElementById('rankSub').textContent=auto
+    ?`Após ${rnd} de ${QUESTIONS.length} perguntas`:'Placar geral';
+
+  buildRankList('rankList');
+  go('rankingScreen');
+
+  if(ST.role === 'admin'){
+    document.getElementById('rankAnbMsg').textContent = 'Admin: clique em Continuar quando quiser seguir';
+    document.getElementById('rankAnbCounter').textContent = '';
+    document.getElementById('rankAnbFill').style.width = '100%';
+    const info = document.querySelector('#rankAutoBar .anb-info');
+    const existingBtn = document.getElementById('adminContinueBtn');
+    if(existingBtn) existingBtn.remove();
+    const btn = document.createElement('button');
+    btn.id = 'adminContinueBtn';
+    btn.className = 'btn btn-sm btn-primary';
+    btn.style.marginLeft = '1rem';
+    btn.textContent = 'Continuar';
+    btn.onclick = adminContinueFromRanking;
+    info.appendChild(btn);
+  } else {
+    document.getElementById('rankAnbMsg').textContent = '⏳ Aguardando o administrador continuar o jogo...';
+    document.getElementById('rankAnbCounter').textContent = '';
+    document.getElementById('rankAnbFill').style.width = '100%';
+    const existingBtn = document.getElementById('adminContinueBtn');
+    if(existingBtn) existingBtn.remove();
+  }
+}
+
+function startRankAutoNext(auto){
+  clearTimeout(_rankAutoTimer);
+  clearInterval(_rankAutoInterval);
+
+  const fill=document.getElementById('rankAnbFill');
+  const msg=document.getElementById('rankAnbMsg');
+  const ctr=document.getElementById('rankAnbCounter');
+
+  if(!auto){
+    // ranking manual chamado por alguém — não auto-avança, mostra só info
+    fill.style.width='0%';
+    fill.classList.add('ranking');
+    msg.textContent='Mostrando placar atual';
+    ctr.textContent='';
+    return;
+  }
+
+  const RANK_WAIT=6; // segundos mostrando o ranking
+  let elapsed=0;
+  fill.style.width='100%';
+  fill.classList.add('ranking');
+  msg.textContent='Próxima rodada em...';
+  ctr.textContent=`${RANK_WAIT}s`;
+
+  _rankAutoInterval=setInterval(()=>{
+    elapsed+=.1;
+    const remaining=Math.max(0,RANK_WAIT-elapsed);
+    const pct=Math.max(0,100-(elapsed/RANK_WAIT)*100);
+    fill.style.width=pct+'%';
+    ctr.textContent=remaining>0?`${Math.ceil(remaining)}s`:'';
+    if(elapsed>=RANK_WAIT){
+      clearInterval(_rankAutoInterval);
+      continueFromRanking();
+    }
+  },100);
+}
+
+function continueFromRanking(){
+  clearTimeout(_rankAutoTimer);
+  clearInterval(_rankAutoInterval);
+  if(ST.currentQ<QUESTIONS.length){
+    go('questionScreen');
+    setupQuestionHUD();
+    renderQuestion();
+  } else {
+    showFinal();
+  }
+}
+
+function adminContinueFromRanking(){
+  const r=getRoom();
+  if(r){
+    r.gamePhase='question';
+    saveRoom(r);
+  }
+  continueFromRanking();
+}
+
+function buildRankList(elId){
+  const r=getRoom();
+  const sorted=[...(r?.players||[])].sort((a,b)=>b.score-a.score);
+  const max=sorted[0]?.score||1;
+  const el=document.getElementById(elId);
+  el.innerHTML='';
+
+  if(!sorted.length){
+    el.innerHTML='<div style="color:var(--muted);text-align:center;padding:1.25rem">Nenhum jogador</div>';
+    return;
+  }
+
+  const medals=['🥇','🥈','🥉'];
+  sorted.forEach((p,i)=>{
+    const pct=max>0?Math.round((p.score/max)*100):0;
+    const isMe=ST.role==='player'&&p.name===ST.playerName;
+    const cls=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const posCls=i===0?'g':i===1?'s':i===2?'b':'';
+
+    const d=document.createElement('div');
+    d.className=`rank-item ${cls}${isMe?' me':''}`;
+    d.innerHTML=`
+      <div class="rpos ${posCls}">${i<3?medals[i]:i+1}</div>
+      <div class="rav" style="border-color:${p.color};color:${p.color};background:${p.color}18">${ini(p.name)}</div>
+      <div class="rname">${p.name}${isMe?'<span class="rme-tag">você</span>':''}</div>
+      <div class="rbar-wrap"><div class="rbar" style="width:0" data-w="${pct}"></div></div>
+      <div class="rpts">${p.score} pts</div>`;
+    el.appendChild(d);
+  });
+
+  // Anima barras com delay
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      el.querySelectorAll('.rbar').forEach(b=>{b.style.width=b.dataset.w+'%'});
+    },80);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   FINAL
+═══════════════════════════════════════════════ */
+function showFinal(){
+  const r=getRoom();
+  const sorted=[...(r?.players||[])].sort((a,b)=>b.score-a.score);
+
+  // Pódio visual: 2º | 1º | 3º
+  const pod=document.getElementById('podium');
+  pod.innerHTML='';
+
+  const slots=sorted.length>=3
+    ?[[sorted[1],'p2','b2','🥈'],[sorted[0],'p1','b1','🥇'],[sorted[2],'p3','b3','🥉']]
+    :sorted.length===2
+    ?[[sorted[1],'p2','b2','🥈'],[sorted[0],'p1','b1','🥇']]
+    :sorted.length===1
+    ?[[sorted[0],'p1','b1','🥇']]
+    :[];
+
+  slots.forEach(([p,avCls,barCls,medal])=>{
+    if(!p) return;
+    const slot=document.createElement('div');slot.className='pod-slot';
+    slot.innerHTML=`
+      <div class="pod-av ${avCls}" style="border-color:${p.color};color:${p.color};background:${p.color}18">${ini(p.name)}</div>
+      <div class="pod-name">${p.name.split(' ')[0]}</div>
+      <div class="pod-bar ${barCls}">${medal}</div>`;
+    pod.appendChild(slot);
+  });
+
+  buildRankList('finalList');
+
+  if(r){r.started=false;r.gamePhase='finished';saveRoom(r);}
+  go('finalScreen');
+}
+
+/* ═══════════════════════════════════════════════
+   REINICIAR
+═══════════════════════════════════════════════ */
+function restartGame(){
+  clearInterval(ST.timer);
+  clearTimeout(ST.blurTimer);
+  clearInterval(_revealCountdown);
+
+  // Reseta sala
+  const r=getRoom();
+  if(r){
+    r.players.forEach(p=>{p.score=0;p.lastCorrect=false});
+    r.started=false;
+    r.gamePhase='lobby';
+    r.currentQ=0;
+    saveRoom(r);
+  }
+
+  Object.assign(ST,{
+    role:null,playerName:'',playerScore:0,
+    currentQ:0,answered:false,
+    blurPhase:0,blurLevel:75,
+    timerVal:TIMER_TOTAL,
+  });
+
+  document.getElementById('playerName').value='';
+  go('homeScreen');
+}
+</script>
+</body>
+</html>
